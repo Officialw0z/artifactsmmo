@@ -135,9 +135,18 @@ async function fight() {
 
     try {
         const response = await fetch (url, options)
-        data = await response.json()
+        if (!response.ok) {
+          console.error('API Error:')
+          return
+        }
 
-        console.log(data)
+        data = await response.json()
+        console.log('Fight respone', data)
+
+        if (!data.data || !data.data.cooldown || !data.data.character) {
+          console.error('Ogiltrilig')
+          return
+        }
 
         coolDownTimer = data.data.cooldown.remaining_seconds
         currentHP = data.data.character.hp
@@ -147,62 +156,72 @@ async function fight() {
         if (coolDownTimer > 0) {
           coolDown()
         }
+  
+if(automateEl.checked && data.data.fight && data.data.fight.result === 'win') {
 
-    }
-    catch(error) {
-        console.log(error)
-    }
-
-
-if(automateEl.checked && data.data.fight.result === 'win') {
-
-  if(data.data.character.hp < 70) {
+  if(currentHP < 170) {
+      console.log('Low hp, resting...')
       setTimeout(() => rest(fight), (coolDownTimer + 3) * 1000)
   }
   else {
-      console.log("automatic fighting")
-      console.log("cooldown: " + ((coolDownTimer + 3) * 1000))
+      console.log("HP Status ok, keeping up the fight!")
       setTimeout(fight, (coolDownTimer + 3) * 1000 )
   }
-
 }
-else if(data.data.fight.result === 'loss') {
-  console.log("loss")
+else if(data.data.fight && data.data.fight.result === 'loss') {
+  console.log("loss!!!!")
   automateEl.checked = false
 }
+
+} catch(error) {
+  console.error('Ett fel inträffade', error)
+}
 }
 
+async function rest(callback) {
+  const url = server + '/my/' + character + '/action/rest';
 
-async function rest() {
-    const url = server + '/my/' + character + '/action/rest'
+  const options = {
+      method: 'POST',
+      headers: {
+          'Content-Type': 'application/json',
+          Accept: 'application/json',
+          Authorization: 'Bearer ' + token
+      },
+  };
 
-    const options = {
-        method: 'POST',
-        headers: {
-        'Content-Type': 'application/json',
-        Accept: 'application/json',
-        Authorization: 'Bearer ' + token
-        },
-    }
+  try {
+      const response = await fetch(url, options);
+      if (!response.ok) {
+          console.error('API Error:', response.status, response.statusText);
+          return;
+      }
 
-    try {
-        const response = await fetch (url, options)
-        const data = await response.json()
+      const data = await response.json();
+      console.log('Rest response:', data);
 
-        console.log(data)
+      if (!data.data || !data.data.cooldown || !data.data.character) {
+          console.error('Ogiltigt svar från API');
+          return;
+      }
 
         coolDownTimer = data.data.cooldown.remaining_seconds
-        currentHP = data.data.character.hp
+        currentHP = data.data.character.hp 
         characterHP.innerText = 'HP:' + ' ' + data.data.character.hp
         coolDownEl.innerText = 'Cooldown:' + ' ' + data.data.cooldown.remaining_seconds
+       
 
-        if (coolDownTimer > 0) {
-          coolDown()
-        }
-    }
-    catch(error) {
-        console.log(error)
-    }
+      if (coolDownTimer > 0) {
+          console.log('Resting cooldown active, waiting...');
+          setTimeout(() => {
+              if (callback) callback(); 
+          }, coolDownTimer * 1000);
+      } else {
+          if (callback) callback(); 
+      }
+  } catch (error) {
+      console.error('Ett fel inträffade under vila:', error);
+  }
 }
 
 async function gathering() {

@@ -122,6 +122,7 @@ async function move(moveX, moveY) {
 
 async function fight() {
     const url = server + '/my/' + character + '/action/fight'
+    let data = null
 
     const options = {
         method: 'POST',

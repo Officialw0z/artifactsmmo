@@ -159,7 +159,7 @@ async function fight() {
   
 if(automateEl.checked && data.data.fight && data.data.fight.result === 'win') {
 
-  if(currentHP < 170) {
+  if(currentHP < 70) {
       console.log('Low hp, resting...')
       setTimeout(() => rest(fight), (coolDownTimer + 3) * 1000)
   }
@@ -204,12 +204,12 @@ async function rest(callback) {
           console.error('Ogiltigt svar från API');
           return;
       }
-
+      
         coolDownTimer = data.data.cooldown.remaining_seconds
         currentHP = data.data.character.hp 
         characterHP.innerText = 'HP:' + ' ' + data.data.character.hp
         coolDownEl.innerText = 'Cooldown:' + ' ' + data.data.cooldown.remaining_seconds
-       
+        coolDown()
 
       if (coolDownTimer > 0) {
           console.log('Resting cooldown active, waiting...');

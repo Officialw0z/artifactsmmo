@@ -47,7 +47,7 @@ downBtn.addEventListener('click', () => {
 
 const server = "https://api.artifactsmmo.com";
 const token = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJlbWFpbCI6InN1cGVybHVja2UxMjNAZ21haWwuY29tIiwicGFzc3dvcmRfY2hhbmdlZCI6IiJ9.ABSXqufIfurQayk-6iV-yM4c1dJPWbPpS3cR9wbhehM";
-const character = "w0z";
+const character = "Redwood";
   
 async function myCharacter() {
       
@@ -160,7 +160,7 @@ async function fight() {
   
 if(automateEl.checked && data.data.fight && data.data.fight.result === 'win') {
 
-  if(currentHP < 300) {
+  if(currentHP < 70) {
       console.log('Low hp, resting...')
       setTimeout(() => rest(fight), (coolDownTimer + 3) * 1000)
   }
@@ -226,221 +226,203 @@ async function rest(callback) {
 }
 
 async function gathering() {
-  const url = server + '/my/' + character + '/action/gathering';
+  const url = server + '/my/' + character + '/action/gathering'
 
   const options = {
-    method: 'POST',
-    headers: {
+      method: 'POST',
+      headers: {
       'Content-Type': 'application/json',
       Accept: 'application/json',
-      Authorization: 'Bearer ' + token,
-    },
-  };
+      Authorization: 'Bearer ' + token
+      },
+  }
 
   try {
-    const response = await fetch(url, options);
-    if (!response.ok) {
-      console.error('API Error:');
-      return;
-    }
+      const response = await fetch (url, options)
+      const data = await response.json()
 
-    const data = await response.json();
-    console.log('Fight response', data);
+      console.log(data)
 
-    if (!data.data || !data.data.cooldown || !data.data.character) {
-      console.error('Ogiltig data');
-      return;
-    }
+      coolDownTimer = data.data.cooldown.remaining_seconds
+      currentHP = data.data.character.hp
+      characterHP.innerText = 'HP:' + ' ' + data.data.character.hp
+      coolDownEl.innerText = 'Cooldown:' + ' ' + data.data.cooldown.remaining_seconds
 
-    coolDownTimer = data.data.cooldown.remaining_seconds;
-    currentHP = data.data.character.hp;
-    characterHP.innerText = 'HP: ' + data.data.character.hp;
-    coolDownEl.innerText = 'Cooldown: ' + data.data.cooldown.remaining_seconds;
-    coolDown()
-    if (coolDownTimer > 0) {
-      console.log(`Cooldown pågår (${coolDownTimer} sekunder)...`);
-      setTimeout(() => {
-        if (automateEl.checked) {
-          gathering(); // Kalla funktionen igen när cooldown är klar
-        }
-      }, coolDownTimer * 1000);
-    } else if (automateEl.checked && data.data.character.gathering === true) {
-      console.log('Auto gathering');
-      gathering(); // Fortsätt gathering om checkboxen är markerad
-    } else {
-      console.log('Not auto gathering');
-    }
-  } catch (error) {
-    console.error('Error:', error);
+      if (coolDownTimer > 0) {
+        coolDown()
+      }
+
+  }
+  catch(error) {
+      console.log(error)
   }
 }
-
 
 
 
 async function gatherLooping() {
-  if (isRequesting) return; 
+    if (isRequesting) return; 
 
-  isRequesting = true;
-  const url = server + '/my/' + character + '/action/gathering';
-  const options = {
-    method: 'POST',
-    headers: {
-    'Content-Type': 'application/json',
-    Accept: 'application/json',
-    Authorization: 'Bearer ' + token,
-    },
-}
-
-
-  try {
-      const response = await fetch(url, options);
-      if (!response.ok) {
-          console.error('API Error:', response.status, response.statusText);
-          return;
-      }
-
-      const data = await response.json();
-      console.log('Response:', data);
-
-      if (data.data && data.data.cooldown && data.data.character) {
-          coolDownTimer = data.data.cooldown.remaining_seconds;
-          currentHP = data.data.character.hp;
-          characterHP.innerText = 'HP: ' + currentHP;
-          coolDownEl.innerText = 'Cooldown: ' + coolDownTimer;
-
-          setTimeout(() => {
-             if (data.data.character.inventory[0].quantity == 96 && currentPosX == 2 && currentPosY == 0) {
-              move(1, 5)
-
-              setTimeout(()=> {
-                crafting("copper", 12)
-              }, 45000)
-            } else {
-              gatherLooping()
-            }
-          }, 45000);
-          
-          
-          if (coolDownTimer > 0) {
-            coolDown()
-          }
-        }
-  } catch (error) {
-      console.error('Ett fel inträffade:', error);
-  } finally {
-      isRequesting = false; 
+    isRequesting = true;
+    const url = server + '/my/' + character + '/action/gathering';
+    const options = {
+      method: 'POST',
+      headers: {
+      'Content-Type': 'application/json',
+      Accept: 'application/json',
+      Authorization: 'Bearer ' + token,
+      },
   }
+
+
+    try {
+        const response = await fetch(url, options);
+        if (!response.ok) {
+            console.error('API Error:', response.status, response.statusText);
+            return;
+        }
+
+        const data = await response.json();
+        console.log('Response:', data);
+
+        if (data.data && data.data.cooldown && data.data.character) {
+            coolDownTimer = data.data.cooldown.remaining_seconds;
+            currentHP = data.data.character.hp;
+            characterHP.innerText = 'HP: ' + currentHP;
+            coolDownEl.innerText = 'Cooldown: ' + coolDownTimer;
+
+            setTimeout(() => {
+               if (data.data.character.inventory[0].quantity == 80 && currentPosX == 6 && currentPosY == 1) {
+                move(-2, -3)
+
+                setTimeout(()=> {
+                  crafting("ash wood", 10)
+                }, 61000)
+              } else {
+                gatherLooping()
+              }
+            }, 61000);
+            
+            
+            if (coolDownTimer > 0) {
+              coolDown()
+            }
+          }
+    } catch (error) {
+        console.error('Ett fel inträffade:', error);
+    } finally {
+        isRequesting = false; 
+    }
 }
 
 
 document.querySelector('.buttons__gather--loop').addEventListener('click', () => {
-isLooping = !isLooping; 
-const loopButton = document.querySelector('.buttons__gather--loop');
-
-if (isLooping) {
-    move(2, 0)
-    setTimeout(() => {
-      gatherLooping(); 
-    }, 45000);
-    loopButton.innerText = 'Stop Loop'; 
-} else {
-    loopButton.innerText = 'Start Loop'; 
-}
+  isLooping = !isLooping; 
+  const loopButton = document.querySelector('.buttons__gather--loop');
+  
+  if (isLooping) {
+      move(6, 1)
+      setTimeout(() => {
+        gatherLooping(); 
+      }, 61000);
+      loopButton.innerText = 'Stop Loop'; 
+  } else {
+      loopButton.innerText = 'Start Loop'; 
+  }
 });
 
 async function crafting(craftCode, quantity) {
-const url = server + '/my/' + character + '/action/crafting'
+  const url = server + '/my/' + character + '/action/crafting'
 
-const options = {
-    method: 'POST',
-    headers: {
-    'Content-Type': 'application/json',
-    Accept: 'application/json',
-    Authorization: 'Bearer ' + token
-    },
-    body: JSON.stringify({code: craftCode, quantity: quantity})
-}
+  const options = {
+      method: 'POST',
+      headers: {
+      'Content-Type': 'application/json',
+      Accept: 'application/json',
+      Authorization: 'Bearer ' + token
+      },
+      body: JSON.stringify({code: craftCode, quantity: quantity})
+  }
 
-try {
-    const response = await fetch (url, options)
-    const data = await response.json()
+  try {
+      const response = await fetch (url, options)
+      const data = await response.json()
 
-    console.log(data)
+      console.log(data)
 
-    coolDownTimer = data.data.cooldown.remaining_seconds
-    coolDownEl.innerText = 'Cooldown:' + ' ' + data.data.cooldown.remaining_seconds
+      coolDownTimer = data.data.cooldown.remaining_seconds
+      coolDownEl.innerText = 'Cooldown:' + ' ' + data.data.cooldown.remaining_seconds
 
-    setTimeout(() => {
-      if (data.data.character.inventory.some(item => item.quantity === 12) && currentPosX === 1 && currentPosY === 5) {
-         move(4, 1)
+      setTimeout(() => {
+        if (data.data.character.inventory.some(item => item.quantity === 10) && currentPosX === -2 && currentPosY === -3) {
+           move(4, 1)
+ 
+           setTimeout(() => {
+             deposit("Ash", 10) 
+           }, 61000);
+         }
+       }, 65000);
 
-         setTimeout(() => {
-           deposit("copper", 12) 
-         }, 45000);
-       }
-     }, 65000);
+      if (coolDownTimer > 0) {
+        coolDown()
+      }
 
-    if (coolDownTimer > 0) {
-      coolDown()
-    }
-
-}
-catch(error) {
-    console.log(error)
-}
+  }
+  catch(error) {
+      console.log(error)
+  }
 }
 
 
 async function deposit(depositCode, quantity) {
-const url = server + '/my/' + character + '/action/bank/deposit'
+  const url = server + '/my/' + character + '/action/bank/deposit'
 
-const options = {
-    method: 'POST',
-    headers: {
-    'Content-Type': 'application/json',
-    Accept: 'application/json',
-    Authorization: 'Bearer ' + token
-    },
-    body: JSON.stringify({code: depositCode, quantity: quantity})
-}
+  const options = {
+      method: 'POST',
+      headers: {
+      'Content-Type': 'application/json',
+      Accept: 'application/json',
+      Authorization: 'Bearer ' + token
+      },
+      body: JSON.stringify({code: depositCode, quantity: quantity})
+  }
 
-try {
-    const response = await fetch (url, options)
-    const data = await response.json()
+  try {
+      const response = await fetch (url, options)
+      const data = await response.json()
 
-    console.log(data)
+      console.log(data)
 
-    coolDownTimer = data.data.cooldown.remaining_seconds
-    coolDownEl.innerText = 'Cooldown:' + ' ' + data.data.cooldown.remaining_seconds
+      coolDownTimer = data.data.cooldown.remaining_seconds
+      coolDownEl.innerText = 'Cooldown:' + ' ' + data.data.cooldown.remaining_seconds
 
-    setTimeout(() => {
-     move(2, 0)
-     setTimeout(() => {
-      gatherLooping()
-     }, 40000);
-    }, 40000);
+      setTimeout(() => {
+       move(6, 1)
+       setTimeout(() => {
+        gatherLooping()
+       }, 40000);
+      }, 40000);
 
-    if (coolDownTimer > 0) {
-      coolDown()
-    }
-    
-}
-catch(error) {
-    console.log(error)
-}
-}
+      if (coolDownTimer > 0) {
+        coolDown()
+      }
+      
+  }
+  catch(error) {
+      console.log(error)
+  }
+  }
 
 
 function coolDown() {
-if (coolDownInterval) clearInterval(coolDownInterval); 
+  if (coolDownInterval) clearInterval(coolDownInterval); 
 
-  coolDownInterval = setInterval(() => {
-      if (coolDownTimer > 0) {
-          coolDownTimer--;
-          coolDownEl.innerText = 'Cooldown: ' + coolDownTimer;
-      } else {
-          clearInterval(coolDownInterval); 
-      }
-  }, 1000); 
+    coolDownInterval = setInterval(() => {
+        if (coolDownTimer > 0) {
+            coolDownTimer--;
+            coolDownEl.innerText = 'Cooldown: ' + coolDownTimer;
+        } else {
+            clearInterval(coolDownInterval); 
+        }
+    }, 1000); 
 }
